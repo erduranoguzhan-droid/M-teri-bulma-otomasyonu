@@ -50,6 +50,10 @@ export interface StartScanInput {
 export async function startScanAction(
   input: StartScanInput,
 ): Promise<{ ok: boolean; error?: string }> {
+  // Vercel/serverless'ta tarama (Playwright + CLI) calismaz — yerelde yapilir.
+  if (process.env.VERCEL) {
+    return { ok: false, error: "Tarama yalnızca yerelde çalışır (npm run scan). Canlı panel oku/yönet/gönder amaçlıdır." };
+  }
   if (isScanActive(await readScanStatus())) {
     return { ok: false, error: "Zaten bir tarama çalışıyor." };
   }
