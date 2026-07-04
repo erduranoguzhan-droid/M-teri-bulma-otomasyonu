@@ -1,0 +1,26 @@
+# Bagimliliklar
+node_modules/
+**/node_modules/
+
+# Ortam degiskenleri / SIRLAR — asla commit edilmez (Supabase service_role, DB sifresi)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Yerel veri (lead kayitlari, tarama durumu — is verisi)
+data/*.json
+!data/.gitkeep
+
+# Next.js / build
+.next/
+**/.next/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Diger
+*.log
+.DS_Store

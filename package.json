@@ -1,0 +1,39 @@
+{
+  "name": "vertex-leadgen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Vertex AI Lead Generation - core loop (find -> enrich -> analyze -> outreach)",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "find": "tsx src/cli.ts find",
+    "enrich": "tsx src/cli.ts enrich",
+    "analyze": "tsx src/cli.ts analyze",
+    "outreach": "tsx src/cli.ts outreach",
+    "outreach:regen": "tsx src/regenOutreach.ts",
+    "pipeline": "tsx src/cli.ts pipeline",
+    "scan": "tsx src/scan.ts",
+    "setup-db": "tsx src/setupDb.ts",
+    "rescore": "tsx src/rescore.ts",
+    "reenrich": "tsx src/reenrich.ts",
+    "migrate": "tsx src/migrate.ts",
+    "list": "tsx src/cli.ts list",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.109.0",
+    "@supabase/supabase-js": "^2.110.0",
+    "@types/pg": "^8.20.0",
+    "dotenv": "^16.4.7",
+    "pg": "^8.22.0",
+    "playwright": "^1.49.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
