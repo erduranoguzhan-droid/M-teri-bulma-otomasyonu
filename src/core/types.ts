@@ -2,6 +2,11 @@
 // Bir "Lead" pipeline boyunca asama asama zenginlesir:
 // find -> enrich -> analyze -> outreach
 
+import type { CompanyIntelligence } from "./intelligence.js";
+
+/** Tarama modu: mevcut sektor-bazli veya yeni firma-bazli AI intelligence. */
+export type ScanMode = "sector" | "company";
+
 export type CrmStatus =
   | "yeni"
   | "iletisim_kuruldu"
@@ -19,13 +24,23 @@ export type PipelineStage = "found" | "enriched" | "analyzed" | "outreach_ready"
 export interface RawCompany {
   name: string;
   category?: string;
+  subcategory?: string;
+  description?: string;
   address?: string;
   city?: string;
+  district?: string;
+  country?: string;
+  postalCode?: string;
   phone?: string;
   website?: string;
   rating?: number;
   reviewCount?: number;
   mapsUrl?: string;
+  // Firma-bazli modda cikarilan ek konum/kimlik verileri (opsiyonel).
+  placeId?: string;
+  lat?: number;
+  lng?: number;
+  hours?: string;
 }
 
 /** Website taramasindan cikarilan teknik/iletisim zenginlestirmesi. */
@@ -57,6 +72,13 @@ export interface Enrichment {
   websiteTitle?: string;
   /** LLM'e ham baglam olarak verilecek kisaltilmis metin. */
   pageTextSnippet?: string;
+  // Firma-bazli derin enrichment (opsiyonel; sektor akisi kullanmaz).
+  generalEmail?: string;
+  salesEmail?: string;
+  supportEmail?: string;
+  contactFormUrl?: string;
+  /** Taranan sayfa URL'leri (about/contact/team/careers/services/products/blog). */
+  pagesCrawled?: string[];
 }
 
 /** LLM analiz sonucu. */
@@ -91,6 +113,10 @@ export interface Lead {
   enrichment?: Enrichment;
   analysis?: Analysis;
   outreach?: Outreach;
+  /** "sector" (varsayilan/mevcut) veya "company" (firma-bazli AI intelligence). */
+  scanMode?: ScanMode;
+  /** Firma-bazli modda uretilen tam AI Sales Intelligence blogu. */
+  intelligence?: CompanyIntelligence;
   // Outreach/takip (dashboard'dan doldurulur)
   contactedAt?: string;
   contactChannel?: ContactChannel;

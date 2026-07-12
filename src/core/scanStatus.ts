@@ -3,6 +3,23 @@ import { dirname } from "node:path";
 
 export type ScanPhase = "idle" | "find" | "enrich" | "analyze" | "outreach" | "done" | "error";
 
+/** Firma-bazli modda her firmanin ilerleme durumu. */
+export type CompanyItemPhase =
+  | "waiting"
+  | "searching"
+  | "scraping"
+  | "enriching"
+  | "ai_analyzing"
+  | "completed"
+  | "error";
+
+export interface CompanyScanItem {
+  name: string;
+  phase: CompanyItemPhase;
+  leadId?: string;
+  message?: string;
+}
+
 export interface ScanStatus {
   running: boolean;
   phase: ScanPhase;
@@ -13,6 +30,9 @@ export interface ScanStatus {
   queryTotal: number;
   found: number; // bu taramada bulunan toplam firma
   message?: string;
+  // Firma-bazli mod (opsiyonel; sektor modu bunlari kullanmaz).
+  mode?: "sector" | "company";
+  items?: CompanyScanItem[];
 }
 
 export const SCAN_STATUS_PATH = "data/scan-status.json";

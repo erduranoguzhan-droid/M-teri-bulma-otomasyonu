@@ -127,6 +127,8 @@ type Row = {
   enrichment: Lead["enrichment"] | null;
   analysis: Lead["analysis"] | null;
   outreach: Lead["outreach"] | null;
+  scan_mode: Lead["scanMode"] | null;
+  intelligence: Lead["intelligence"] | null;
 };
 
 export function leadToRow(lead: Lead): Row {
@@ -146,6 +148,8 @@ export function leadToRow(lead: Lead): Row {
     enrichment: lead.enrichment ?? null,
     analysis: lead.analysis ?? null,
     outreach: lead.outreach ?? null,
+    scan_mode: lead.scanMode ?? null,
+    intelligence: lead.intelligence ?? null,
   };
 }
 
@@ -160,6 +164,8 @@ export function rowToLead(r: Row): Lead {
     enrichment: r.enrichment ?? undefined,
     analysis: r.analysis ?? undefined,
     outreach: r.outreach ?? undefined,
+    scanMode: r.scan_mode ?? undefined,
+    intelligence: r.intelligence ?? undefined,
     contactedAt: r.contacted_at ?? undefined,
     contactChannel: (r.contact_channel as Lead["contactChannel"]) ?? undefined,
     followUpAt: r.follow_up_at ?? undefined,

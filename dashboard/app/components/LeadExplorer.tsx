@@ -7,9 +7,16 @@ import { CRM_STATUSES } from "../lib/types";
 import { scoreBand } from "../lib/score";
 import { sectorFor, sectorEmoji, sectorLabel, SECTOR_META } from "../lib/sectors";
 import { bulkUpdateStatusAction } from "../lib/actions";
-import { downloadCsv } from "../lib/csv";
+import { downloadCsv, downloadJson, downloadInstantlyCsv } from "../lib/csv";
 
-type SortKey = "score" | "recent";
+type SortKey = "score" | "recent" | "aiFit" | "buying";
+type FlagKey = "website" | "email" | "decision" | "company";
+const FLAGS: { key: FlagKey; label: string }[] = [
+  { key: "website", label: "Website var" },
+  { key: "email", label: "E-posta var" },
+  { key: "decision", label: "Karar verici var" },
+  { key: "company", label: "🎯 Firma AI modu" },
+];
 const BANDS = [
   { key: "all", label: "Tüm skorlar", min: -1 },
   { key: "hot", label: "Sıcak 75+", min: 75 },
@@ -23,6 +30,7 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
   const [status, setStatus] = useState("all");
   const [band, setBand] = useState("all");
   const [sort, setSort] = useState<SortKey>("score");
+  const [flags, setFlags] = useState<Set<FlagKey>>(new Set());
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState<CrmStatus>("iletisim_kuruldu");
   const [pending, startTransition] = useTransition();
@@ -44,22 +52,37 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
       if (sector !== "all" && sectorFor(l.raw) !== sector) return false;
       if (status !== "all" && l.crmStatus !== status) return false;
       if (bandMin >= 0 && (l.analysis?.leadScore ?? -1) < bandMin) return false;
+      if (flags.has("website") && !l.raw.website) return false;
+      if (flags.has("email") && !(l.enrichment?.emails.length || l.enrichment?.salesEmail)) return false;
+      if (flags.has("decision") && !(l.intelligence?.contacts.length)) return false;
+      if (flags.has("company") && l.scanMode !== "company") return false;
       if (needle) {
         const hay = `${l.raw.name} ${l.raw.category ?? ""} ${l.raw.city ?? ""}`.toLocaleLowerCase("tr-TR");
         if (!hay.includes(needle)) return false;
       }
       return true;
     });
+    const key = (l: Lead): number => {
+      if (sort === "aiFit") return l.intelligence?.scores.aiFitScore ?? l.analysis?.leadScore ?? -1;
+      if (sort === "buying") return l.intelligence?.scores.buyingPotentialScore ?? l.analysis?.icpScore ?? -1;
+      return l.analysis?.leadScore ?? -1;
+    };
     out.sort((a, b) =>
-      sort === "score"
-        ? (b.analysis?.leadScore ?? -1) - (a.analysis?.leadScore ?? -1)
-        : (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""),
+      sort === "recent"
+        ? (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")
+        : key(b) - key(a),
     );
     return out;
-  }, [leads, q, sector, status, band, sort]);
+  }, [leads, q, sector, status, band, sort, flags]);
 
-  const reset = () => { setQ(""); setSector("all"); setStatus("all"); setBand("all"); };
-  const filtersActive = q !== "" || sector !== "all" || status !== "all" || band !== "all";
+  const toggleFlag = (k: FlagKey) =>
+    setFlags((s) => {
+      const n = new Set(s);
+      if (n.has(k)) n.delete(k); else n.add(k);
+      return n;
+    });
+  const reset = () => { setQ(""); setSector("all"); setStatus("all"); setBand("all"); setFlags(new Set()); };
+  const filtersActive = q !== "" || sector !== "all" || status !== "all" || band !== "all" || flags.size > 0;
 
   const toggle = (id: string) =>
     setSelected((s) => {
@@ -95,7 +118,9 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
           onChange={(e) => setQ(e.target.value)}
         />
         <div className="sort-toggle">
-          <button className={sort === "score" ? "on" : ""} onClick={() => setSort("score")}>Skor</button>
+          <button className={sort === "score" ? "on" : ""} onClick={() => setSort("score")}>Öncelik</button>
+          <button className={sort === "buying" ? "on" : ""} onClick={() => setSort("buying")}>Satın Alma</button>
+          <button className={sort === "aiFit" ? "on" : ""} onClick={() => setSort("aiFit")}>AI Uygunluk</button>
           <button className={sort === "recent" ? "on" : ""} onClick={() => setSort("recent")}>En yeni</button>
         </div>
       </div>
@@ -112,6 +137,17 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
           onPick={setStatus}
         />
         <FilterChips items={BANDS.map((b) => ({ key: b.key, label: b.label }))} active={band} onPick={setBand} />
+        <div className="filter-chips">
+          {FLAGS.map((f) => (
+            <button
+              key={f.key}
+              className={`fchip ${flags.has(f.key) ? "on" : ""}`}
+              onClick={() => toggleFlag(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="explorer-count">
@@ -127,9 +163,25 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
           className="csv-btn"
           onClick={() => downloadCsv(filtered)}
           disabled={filtered.length === 0}
-          title="Filtrelenmiş leadleri CSV olarak indir"
+          title="Filtrelenmiş leadleri CSV olarak indir (Excel uyumlu)"
         >
-          ⬇ CSV indir
+          ⬇ CSV
+        </button>
+        <button
+          className="csv-btn"
+          onClick={() => downloadJson(filtered)}
+          disabled={filtered.length === 0}
+          title="Tam veriyi JSON olarak indir (Supabase/Airtable/webhook beslemesi)"
+        >
+          ⬇ JSON
+        </button>
+        <button
+          className="csv-btn"
+          onClick={() => downloadInstantlyCsv(filtered)}
+          disabled={filtered.length === 0}
+          title="Instantly / cold-email platformları için CSV (email + kişiselleştirilmiş mesaj)"
+        >
+          ⬇ Instantly
         </button>
       </div>
 

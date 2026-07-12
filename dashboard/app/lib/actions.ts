@@ -81,3 +81,48 @@ export async function startScanAction(
   child.unref();
   return { ok: true };
 }
+
+export interface StartCompanyScanInput {
+  names: string; // virgül/yeni satır ile ayrılmış firma adları
+  country: string;
+  city: string;
+  lang: "tr" | "en";
+  max: number;
+  depth: "quick" | "standard" | "deep";
+}
+
+export async function startCompanyScanAction(
+  input: StartCompanyScanInput,
+): Promise<{ ok: boolean; error?: string }> {
+  if (process.env.VERCEL) {
+    return { ok: false, error: "Tarama yalnızca yerelde çalışır (npm run scan:company). Canlı panel oku/yönet/gönder amaçlıdır." };
+  }
+  if (isScanActive(await readScanStatus())) {
+    return { ok: false, error: "Zaten bir tarama çalışıyor." };
+  }
+  const names = input.names.trim();
+  if (!names) {
+    return { ok: false, error: "En az bir firma adı gir." };
+  }
+
+  const parent = path.join(process.cwd(), "..");
+  const args = [
+    "run", "scan:company", "--",
+    "--names", names,
+    "--depth", input.depth,
+    "--lang", input.lang,
+    "--max", String(Math.max(1, Math.min(200, input.max || 50))),
+  ];
+  if (input.country.trim()) args.push("--country", input.country.trim());
+  if (input.city.trim()) args.push("--city", input.city.trim());
+
+  const child = spawn("npm", args, {
+    cwd: parent,
+    detached: true,
+    shell: true,
+    stdio: "ignore",
+    windowsHide: true,
+  });
+  child.unref();
+  return { ok: true };
+}

@@ -27,8 +27,13 @@ create table if not exists leads (
   outreach jsonb
 );
 
+-- Ic ice veriler JSONB olarak (firma-bazli AI intelligence)
+-- Bu iki sutun mevcut leads tablosuna additive eklenir (sektor modu etkilenmez).
+
 -- Mevcut tablolara sonradan eklenen sutunlar (idempotent).
 alter table leads add column if not exists deal_value bigint;
+alter table leads add column if not exists scan_mode text;
+alter table leads add column if not exists intelligence jsonb;
 
 create index if not exists leads_lead_score_idx on leads (lead_score desc nulls last);
 create index if not exists leads_follow_up_idx on leads (follow_up_at) where follow_up_at is not null;

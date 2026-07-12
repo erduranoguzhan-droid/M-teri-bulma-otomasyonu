@@ -11,6 +11,7 @@ import { urgencySignals, icpSignals, SCORE_WEIGHTS, BUDGET_FACTOR } from "../../
 import { nextAction } from "../../lib/nextAction";
 import { budgetEstimate, formatTRY } from "../../lib/pipeline";
 import { DealValueInput } from "../../components/DealValueInput";
+import { IntelligencePanel } from "../../components/IntelligencePanel";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,10 @@ export default async function LeadDetail({ params }: { params: Promise<{ id: str
         {e?.socials.instagram && <Fact k="Instagram" v="Profil" link={e.socials.instagram} />}
       </div>
 
-      {a && (
+      {/* Firma-bazlı AI Sales Intelligence (varsa zengin görünüm) */}
+      {lead.intelligence && <IntelligencePanel intel={lead.intelligence} enrichment={e} />}
+
+      {a && !lead.intelligence && (
         <div className="section">
           <h3>Analiz</h3>
           <div className="scores">

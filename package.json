@@ -15,6 +15,7 @@
     "outreach:regen": "tsx src/regenOutreach.ts",
     "pipeline": "tsx src/cli.ts pipeline",
     "scan": "tsx src/scan.ts",
+    "scan:company": "tsx src/companyScan.ts",
     "setup-db": "tsx src/setupDb.ts",
     "rescore": "tsx src/rescore.ts",
     "reenrich": "tsx src/reenrich.ts",
