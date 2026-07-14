@@ -34,6 +34,7 @@ export type CompanyItemPhase =
   | "scraping"
   | "enriching"
   | "ai_analyzing"
+  | "competitor_analyzing"
   | "completed"
   | "error";
 
@@ -50,6 +51,7 @@ export const ITEM_PHASE_LABEL: Record<CompanyItemPhase, string> = {
   scraping: "Site taranıyor",
   enriching: "Zenginleştiriliyor",
   ai_analyzing: "AI analiz ediyor",
+  competitor_analyzing: "Rakip analizi",
   completed: "Tamamlandı",
   error: "Hata",
 };

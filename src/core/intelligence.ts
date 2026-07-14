@@ -174,6 +174,74 @@ export interface CompanyIntelligence {
   // Guven + kaynak izlenebilirligi
   sources: string[];
   confidence: number;
+  // Rakip analizi (opsiyonel; yalniz deep/rakip-acikken uretilir — additive, eski kayitlar etkilenmez).
+  competitors?: CompetitorAnalysis;
+}
+
+// ---------------------------------------------------------------------------
+// Rakip analizi (additive) — rakipler GERCEKTEN taranir; matris gercek sinyallerden.
+// ---------------------------------------------------------------------------
+
+/** Bir firmanin (lead veya rakip) dijital yetenek matrisi — site/DNS sinyallerinden. */
+export interface CompetitorCapabilities {
+  analytics: boolean;
+  crmMarketing: boolean;
+  liveChat: boolean;
+  ecommerce: boolean;
+  blog: boolean;
+  metaPixel: boolean;
+  whatsapp: boolean;
+  ssl: boolean | null;
+  dmarc: boolean | null;
+}
+
+/** Karsilastirma matrisinde gosterilecek yetenekler (sira + Turkce etiket). */
+export const COMPETITOR_CAPABILITY_LABELS: { key: keyof CompetitorCapabilities; label: string }[] = [
+  { key: "analytics", label: "Analytics" },
+  { key: "crmMarketing", label: "CRM / Pazarlama" },
+  { key: "liveChat", label: "Canlı Chat" },
+  { key: "ecommerce", label: "E-ticaret" },
+  { key: "blog", label: "İçerik/Blog" },
+  { key: "metaPixel", label: "Meta Pixel" },
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "ssl", label: "SSL" },
+  { key: "dmarc", label: "DMARC" },
+];
+
+/** Taranmis tek rakip — hepsi gercek site/DNS verisinden; erisilemezse reachable:false. */
+export interface CompetitorSnapshot {
+  name: string;
+  website: string | null;
+  source: "ai_suggested" | "user";
+  reachable: boolean;
+  digitalMaturityScore: number;
+  techStack: TechStack;
+  capabilities: CompetitorCapabilities;
+  socialPresence: string[];
+  note?: string;
+}
+
+/** Tek yetenek icin lead vs rakipler kiyasi. */
+export interface CompetitorGap {
+  capability: string;
+  leadHas: boolean;
+  competitorsWithIt: number;
+  totalCompetitors: number;
+  verdict: "behind" | "ahead" | "par";
+}
+
+/** Lead'e eklenen tam rakip analizi blogu. */
+export interface CompetitorAnalysis {
+  generatedAt: string;
+  competitors: CompetitorSnapshot[];
+  gaps: CompetitorGap[];
+  leadDigitalMaturity: number;
+  avgCompetitorMaturity: number;
+  competitivePressureScore: number;
+  behindOn: string[];
+  aheadOn: string[];
+  competitiveSummary: string;
+  salesAngle: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -186,6 +254,8 @@ export interface IntelScoreInput {
   tech: TechStack;
   contacts: DecisionMaker[];
   signals: NewsSignal[];
+  /** Rakip baskisi (0-100). Verilmezse mevcut davranis birebir korunur (additive). */
+  competitivePressure?: number;
 }
 
 const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
@@ -204,6 +274,7 @@ function techRichness(t: TechStack): number {
 
 export function computeIntelScores(input: IntelScoreInput): IntelScores {
   const { raw, enrichment: e, tech, contacts, signals } = input;
+  const pressure = Math.max(0, Math.min(100, input.competitivePressure ?? 0));
   const reachable = !!e?.websiteReachable;
   const hasSite = !!raw.website;
   const hasEmail = (e?.emails?.length ?? 0) > 0;
@@ -256,7 +327,8 @@ export function computeIntelScores(input: IntelScoreInput): IntelScores {
       (!hasAnalytics ? 10 : 0) +
       (hiring ? 15 : 0) +
       (growth ? 15 : 0) +
-      (staleSite ? 10 : 0),
+      (staleSite ? 10 : 0) +
+      0.2 * pressure, // rakip baskisi: rakipler onde/lead geride -> aciliyet artar (additive)
   );
 
   // Oncelik: aciliyet + potansiyel + AI uygunlugu agirlikli.
@@ -270,4 +342,54 @@ export function computeIntelScores(input: IntelScoreInput): IntelScores {
     urgencyScore: urgency,
     priorityScore: priority,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Rakip analizi yardimcilari (deterministik — gercek sinyallerden, uydurma yok)
+// ---------------------------------------------------------------------------
+
+/** Site/DNS sinyallerinden bir firmanin dijital yetenek matrisini cikarir. */
+export function competitorCapabilities(tech: TechStack, e: Enrichment | undefined): CompetitorCapabilities {
+  return {
+    analytics: tech.analytics.length > 0 || !!e?.tech?.hasGoogleAnalytics || !!e?.tech?.hasGoogleTagManager,
+    crmMarketing: tech.crmMarketing.length > 0,
+    liveChat: !!e?.tech?.hasLiveChat,
+    ecommerce: tech.ecommerce.length > 0 || !!e?.tech?.ecommercePlatform,
+    blog: !!e?.tech?.hasBlog,
+    metaPixel: !!e?.tech?.hasMetaPixel,
+    whatsapp: !!e?.tech?.hasWhatsApp,
+    ssl: tech.emailDns.ssl,
+    dmarc: tech.emailDns.dmarc,
+  };
+}
+
+/** Lead vs rakipler icin yetenek-basi kiyas matrisi. */
+export function buildCompetitorGaps(
+  lead: CompetitorCapabilities,
+  competitors: CompetitorCapabilities[],
+): CompetitorGap[] {
+  const total = competitors.length;
+  return COMPETITOR_CAPABILITY_LABELS.map(({ key, label }) => {
+    const leadHas = !!lead[key];
+    const competitorsWithIt = competitors.filter((c) => !!c[key]).length;
+    const verdict: CompetitorGap["verdict"] =
+      !leadHas && competitorsWithIt > 0
+        ? "behind"
+        : leadHas && competitorsWithIt < total
+          ? "ahead"
+          : "par";
+    return { capability: label, leadHas, competitorsWithIt, totalCompetitors: total, verdict };
+  });
+}
+
+/** Rakip baskisi 0-100: geride kalinan yetenek orani + dijital olgunluk acigi. */
+export function computeCompetitivePressure(
+  gaps: CompetitorGap[],
+  leadMaturity: number,
+  avgCompetitorMaturity: number,
+): number {
+  const behind = gaps.filter((g) => g.verdict === "behind").length;
+  const behindFrac = gaps.length ? behind / gaps.length : 0; // 0-1
+  const maturityDeficit = Math.max(0, avgCompetitorMaturity - leadMaturity); // 0-100
+  return clamp(0.6 * behindFrac * 100 + 0.4 * maturityDeficit);
 }

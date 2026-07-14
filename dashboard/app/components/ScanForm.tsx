@@ -38,6 +38,12 @@ export function ScanForm() {
   const [lang, setLang] = useState<"tr" | "en">("tr");
   const [coMax, setCoMax] = useState(50);
   const [depth, setDepth] = useState<"quick" | "standard" | "deep">("standard");
+  // Rakip analizi alanları
+  const [withCompetitors, setWithCompetitors] = useState(false);
+  const [competitors, setCompetitors] = useState("");
+  const [maxCompetitors, setMaxCompetitors] = useState(4);
+  // Deep derinlikte rakip analizi her zaman açık (CLI de otomatik yapar).
+  const competitorsOn = depth === "deep" || withCompetitors;
 
   async function poll() {
     const res = await fetch("/api/scan-status", { cache: "no-store" });
@@ -83,6 +89,7 @@ export function ScanForm() {
     setBusy(true);
     const res = await startCompanyScanAction({
       names, country: coCountry, city: coCity, lang, max: coMax, depth,
+      competitors, maxCompetitors, withCompetitors: competitorsOn,
     });
     setBusy(false);
     if (!res.ok) return setError(res.error ?? "Tarama başlatılamadı.");
@@ -204,6 +211,43 @@ export function ScanForm() {
                   </select>
                 </label>
               </div>
+
+              {/* Rakip analizi */}
+              <div className="preset-row" style={{ gap: 8, alignItems: "center" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, flexDirection: "row" }}>
+                  <input
+                    type="checkbox"
+                    checked={competitorsOn}
+                    disabled={depth === "deep"}
+                    onChange={(e) => setWithCompetitors(e.target.checked)}
+                  />
+                  🥊 Rakip analizi yap{depth === "deep" ? " (deep'te otomatik)" : ""}
+                </label>
+                <label className="max">
+                  Maks. rakip
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={maxCompetitors}
+                    disabled={!competitorsOn}
+                    onChange={(e) => setMaxCompetitors(Number(e.target.value))}
+                  />
+                </label>
+              </div>
+              {competitorsOn && (
+                <label>
+                  Rakipler (elle, opsiyonel — boşsa AI önerir)
+                  <textarea
+                    rows={2}
+                    value={competitors}
+                    onChange={(e) => setCompetitors(e.target.value)}
+                    placeholder={"Trendyol Go, Migros Hemen"}
+                    style={{ width: "100%", resize: "vertical" }}
+                  />
+                </label>
+              )}
+
               <button className="btn btn-wa" onClick={submitCompany} disabled={busy || !names.trim()}>
                 {busy ? "Başlatılıyor…" : "AI Intelligence Taramayı Başlat"}
               </button>
@@ -271,6 +315,7 @@ function CompanyProgress({ items }: { items: NonNullable<ScanStatus["items"]> })
     completed: "#34d399",
     error: "#f87171",
     ai_analyzing: "#a78bfa",
+    competitor_analyzing: "#f59e0b",
   };
   return (
     <div className="company-progress" style={{ marginTop: 12, display: "grid", gap: 4 }}>

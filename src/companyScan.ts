@@ -6,8 +6,9 @@ import { writeScanStatus, type CompanyScanItem, type ScanStatus } from "./core/s
 import { findCompanyByName } from "./modules/finder/byName.js";
 import { deepEnrichCompany } from "./modules/enricher/deepEnrich.js";
 import { analyzeIntelligence } from "./modules/analyzer/intelligence.js";
+import { runCompetitorAnalysis } from "./modules/analyzer/competitors.js";
 import type { Analysis, Outreach } from "./core/types.js";
-import type { CompanyIntelligence, ScanDepth } from "./core/intelligence.js";
+import { computeIntelScores, type CompanyIntelligence, type ScanDepth } from "./core/intelligence.js";
 
 /**
  * FIRMA-BAZLI AI Intelligence tarama. Tek/coklu firma adi veya CSV alir; her firma icin
@@ -24,6 +25,9 @@ interface CompanyArgs {
   lang: "tr" | "en";
   max: number;
   depth: ScanDepth;
+  competitors: string[]; // elle verilen rakip adlari (opsiyonel)
+  maxCompetitors: number; // firma-basi rakip ust siniri
+  withCompetitors: boolean; // rakip analizi calissin mi (deep'te otomatik acik)
 }
 
 async function main(): Promise<void> {
@@ -66,6 +70,27 @@ async function main(): Promise<void> {
 
       await setItem(status, item, "ai_analyzing");
       const intel = await analyzeIntelligence(raw, deep, { depth: args.depth, language: args.lang });
+
+      // Rakip analizi (opsiyonel/additive): rakipleri gercekten tarar, matris + baskiyi uretir,
+      // rakip baskisini urgency/priority skorlarina additive besler.
+      if (args.withCompetitors) {
+        await setItem(status, item, "competitor_analyzing");
+        const competitors = await runCompetitorAnalysis({
+          raw, deep, intel,
+          userNames: args.competitors,
+          max: args.maxCompetitors,
+          lang: args.lang,
+        });
+        intel.competitors = competitors;
+        intel.scores = computeIntelScores({
+          raw,
+          enrichment: deep.enrichment,
+          tech: deep.technologies,
+          contacts: deep.contacts,
+          signals: deep.signals,
+          competitivePressure: competitors.competitivePressureScore,
+        });
+      }
 
       // Store: firma lead'i olustur + uyumluluk alanlari (mevcut dashboard'da calissin).
       const lead = await store.upsertRaw(raw);
@@ -153,6 +178,12 @@ async function parseArgs(argv: string[]): Promise<CompanyArgs> {
   const max = Number(get("--max")) || 100;
   const unique = [...new Set(names.map((n) => n.trim()).filter(Boolean))].slice(0, max);
 
+  const competitors = splitNames(get("--competitors") ?? "");
+  const maxCompetitors = Number(get("--max-competitors")) || 4;
+  // Rakip analizi: deep derinlikte otomatik; --with-competitors bayragi ya da elle rakip verilince de acilir.
+  const withCompetitors =
+    depth === "deep" || argv.includes("--with-competitors") || competitors.length > 0;
+
   return {
     names: unique,
     country: get("--country")?.trim() || undefined,
@@ -160,6 +191,9 @@ async function parseArgs(argv: string[]): Promise<CompanyArgs> {
     lang: langRaw === "en" ? "en" : "tr",
     max,
     depth,
+    competitors,
+    maxCompetitors,
+    withCompetitors,
   };
 }
 

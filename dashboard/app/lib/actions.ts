@@ -89,6 +89,9 @@ export interface StartCompanyScanInput {
   lang: "tr" | "en";
   max: number;
   depth: "quick" | "standard" | "deep";
+  competitors?: string; // elle rakip adları (virgül/satır) — opsiyonel
+  maxCompetitors?: number; // firma başı rakip üst sınırı
+  withCompetitors?: boolean; // rakip analizi açık mı (deep'te zaten otomatik)
 }
 
 export async function startCompanyScanAction(
@@ -115,6 +118,11 @@ export async function startCompanyScanAction(
   ];
   if (input.country.trim()) args.push("--country", input.country.trim());
   if (input.city.trim()) args.push("--city", input.city.trim());
+  // Rakip analizi (opsiyonel; deep derinlikte CLI zaten otomatik açar).
+  const competitors = (input.competitors ?? "").trim();
+  if (competitors) args.push("--competitors", competitors);
+  if (input.maxCompetitors) args.push("--max-competitors", String(Math.max(1, Math.min(10, input.maxCompetitors))));
+  if (input.withCompetitors) args.push("--with-competitors");
 
   const child = spawn("npm", args, {
     cwd: parent,

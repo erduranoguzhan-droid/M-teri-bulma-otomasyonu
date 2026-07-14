@@ -9,13 +9,14 @@ import { sectorFor, sectorEmoji, sectorLabel, SECTOR_META } from "../lib/sectors
 import { bulkUpdateStatusAction } from "../lib/actions";
 import { downloadCsv, downloadJson, downloadInstantlyCsv } from "../lib/csv";
 
-type SortKey = "score" | "recent" | "aiFit" | "buying";
-type FlagKey = "website" | "email" | "decision" | "company";
+type SortKey = "score" | "recent" | "aiFit" | "buying" | "pressure";
+type FlagKey = "website" | "email" | "decision" | "company" | "competitors";
 const FLAGS: { key: FlagKey; label: string }[] = [
   { key: "website", label: "Website var" },
   { key: "email", label: "E-posta var" },
   { key: "decision", label: "Karar verici var" },
   { key: "company", label: "🎯 Firma AI modu" },
+  { key: "competitors", label: "🥊 Rakip analizli" },
 ];
 const BANDS = [
   { key: "all", label: "Tüm skorlar", min: -1 },
@@ -56,6 +57,7 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
       if (flags.has("email") && !(l.enrichment?.emails.length || l.enrichment?.salesEmail)) return false;
       if (flags.has("decision") && !(l.intelligence?.contacts.length)) return false;
       if (flags.has("company") && l.scanMode !== "company") return false;
+      if (flags.has("competitors") && !l.intelligence?.competitors) return false;
       if (needle) {
         const hay = `${l.raw.name} ${l.raw.category ?? ""} ${l.raw.city ?? ""}`.toLocaleLowerCase("tr-TR");
         if (!hay.includes(needle)) return false;
@@ -65,6 +67,7 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
     const key = (l: Lead): number => {
       if (sort === "aiFit") return l.intelligence?.scores.aiFitScore ?? l.analysis?.leadScore ?? -1;
       if (sort === "buying") return l.intelligence?.scores.buyingPotentialScore ?? l.analysis?.icpScore ?? -1;
+      if (sort === "pressure") return l.intelligence?.competitors?.competitivePressureScore ?? -1;
       return l.analysis?.leadScore ?? -1;
     };
     out.sort((a, b) =>
@@ -121,6 +124,7 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
           <button className={sort === "score" ? "on" : ""} onClick={() => setSort("score")}>Öncelik</button>
           <button className={sort === "buying" ? "on" : ""} onClick={() => setSort("buying")}>Satın Alma</button>
           <button className={sort === "aiFit" ? "on" : ""} onClick={() => setSort("aiFit")}>AI Uygunluk</button>
+          <button className={sort === "pressure" ? "on" : ""} onClick={() => setSort("pressure")}>🥊 Rakip Baskısı</button>
           <button className={sort === "recent" ? "on" : ""} onClick={() => setSort("recent")}>En yeni</button>
         </div>
       </div>
@@ -194,6 +198,7 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
             const sec = sectorFor(l.raw);
             const st = CRM_STATUSES.find((s) => s.value === l.crmStatus);
             const isSel = selected.has(l.id);
+            const pressure = l.intelligence?.competitors?.competitivePressureScore;
             return (
               <div key={l.id} className={`lrow ${isSel ? "sel" : ""}`}>
                 <input
@@ -212,7 +217,21 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
                       {[l.raw.category, l.raw.city].filter(Boolean).join(" · ") || "—"}
                     </small>
                   </span>
-                  <span className="svc">{a?.recommendedServices[0] ?? l.stage}</span>
+                  <span className="svc">
+                    {pressure != null && (
+                      <span
+                        title={`Rakip baskısı ${pressure}/100`}
+                        style={{
+                          fontSize: 12, fontWeight: 700, marginRight: 6, padding: "1px 6px", borderRadius: 6,
+                          color: pressure >= 50 ? "#f87171" : "#94a3b8",
+                          border: `1px solid ${pressure >= 50 ? "#f87171" : "#334155"}`,
+                        }}
+                      >
+                        🥊 {pressure}
+                      </span>
+                    )}
+                    {a?.recommendedServices[0] ?? l.stage}
+                  </span>
                   <span style={{ fontSize: 13, fontWeight: 600, color: st?.color }}>● {st?.label ?? l.crmStatus}</span>
                 </Link>
               </div>

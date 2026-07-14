@@ -146,6 +146,12 @@ Artık CLI (`scan`/`analyze`/…) ve dashboard aynı Supabase tablosunu kullanı
 - [x] Detay 2.0: sektör rozeti + "neden bu skor" kırılımı + zenginleştirme detayları
 - [x] Outreach 2.0: **sektöre özel mesaj tonu** (B2B kurumsal ≠ kafe sıcak) + `npm run outreach:regen`
 - [x] Pipeline değer analitiği: açık/beklenen(ağırlıklı)/kazanılan değer + kazanma & iletişim oranı (CAC/LTV temeli)
+- [x] **Rakip analizi** (firma modu): rakipler GERÇEKTEN taranır (deepEnrich) → yetenek matrisi + dijital
+  olgunluk kıyası + "rakip baskısı" skoru (urgency/priority'ye additive) + AI konum özeti/satış açısı.
+  Rakip kaynağı: AI önerir (etiketli) + elle eklenebilir. `deep` derinlikte otomatik; ya da
+  `--with-competitors` / `--competitors "A, B"` / `--max-competitors N` (env `COMPETITOR_MAX`, vars. 4).
+  Dashboard'da firma detayında "Rakip Analizi" panosu (karşılaştırma matrisi). Additive — sektör modu ve
+  eski kayıtlar etkilenmez.
 - [ ] Otomatik yanıt işleme (IMAP e-posta / WhatsApp API) — gelen yanıtı CRM'e yaz
 - [ ] Yeni sektörler (klinik, e-ticaret) — `SECTOR_PLAYBOOK`'a ekle
 - [ ] Yeni kaynaklar (Instagram, LinkedIn) — yeni finder modülü

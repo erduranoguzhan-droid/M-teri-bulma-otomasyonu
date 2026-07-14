@@ -13,16 +13,29 @@ export interface FindByNameOptions {
 
 export async function findCompanyByName(opts: FindByNameOptions): Promise<RawCompany> {
   const query = [opts.name, opts.city, opts.country].filter(Boolean).join(" ").trim();
-  let best: RawCompany | undefined;
+  let results: RawCompany[] = [];
   try {
-    const results = await findCompanies({ query, maxResults: 1 });
-    best = results[0];
+    // Birkac aday cek; ilkini korlemesine almak yerine ISME EN COK BENZEYEni sec.
+    // (Marka aramalarinda Maps ilk sirada alakasiz bir yer donebiliyor.)
+    results = await findCompanies({ query, maxResults: 5 });
   } catch {
-    best = undefined;
+    results = [];
   }
 
-  if (!best) {
-    // Maps'te bulunamadi -> minimal kayit. Enrichment website olmadan sinirli calisir.
+  // En iyi isim eslesmesini bul.
+  let best: RawCompany | undefined;
+  let bestScore = 0;
+  for (const r of results) {
+    const s = nameMatchScore(opts.name, r.name);
+    if (s > bestScore) {
+      bestScore = s;
+      best = r;
+    }
+  }
+
+  // Yeterince benzeyen sonuc yoksa: YANLIS firmayi atfetme (website/telefon karismasin);
+  // minimal kayit don. deepEnrich website olmadan "erisilemedi" isaretler (uydurma yok).
+  if (!best || bestScore < 0.5) {
     return { name: opts.name, country: opts.country, city: opts.city };
   }
 
@@ -34,6 +47,20 @@ export async function findCompanyByName(opts: FindByNameOptions): Promise<RawCom
     country: best.country ?? opts.country,
     ...coords,
   };
+}
+
+/**
+ * Hedef isim ile aday isim benzerligi 0-1. Hedef kelimelerinin kaci adayda geciyor.
+ * "yemeksepeti" -> "Yemeksepeti Park" = 1.0 ; "getir" -> "Maydonoz Döner" = 0.
+ */
+function nameMatchScore(target: string, candidate: string): number {
+  const norm = (s: string) =>
+    s.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9ğüşıöç]+/gi, " ").trim();
+  const tokens = norm(target).split(" ").filter((t) => t.length >= 2);
+  if (!tokens.length) return 0;
+  const cand = norm(candidate);
+  const hits = tokens.filter((t) => cand.includes(t)).length;
+  return hits / tokens.length;
 }
 
 /** Google Maps place URL'inden lat/lng ve place kimligini ayiklar. */

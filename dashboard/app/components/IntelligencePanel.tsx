@@ -10,6 +10,7 @@ import type {
 } from "../lib/types";
 import { INTEL_SCORE_META, OPP_PRIORITY_LABEL } from "../lib/types";
 import { scoreBand } from "../lib/score";
+import { CompetitorPanel } from "./CompetitorPanel";
 
 const DEPTH_LABEL: Record<CompanyIntelligence["depth"], string> = {
   quick: "Hızlı analiz",
@@ -40,6 +41,9 @@ export function IntelligencePanel({
           ))}
         </div>
       </div>
+
+      {/* Rakip Analizi (yalnız üretilmişse — additive) */}
+      {intel.competitors && <CompetitorPanel comp={intel.competitors} />}
 
       {/* Firma Özeti + İhtiyaç */}
       <div className="section">

@@ -148,6 +148,64 @@ export interface IntelScores {
   priorityScore: number;
 }
 
+// --- Rakip analizi (src/core/intelligence.ts aynası) ---
+export interface CompetitorCapabilities {
+  analytics: boolean;
+  crmMarketing: boolean;
+  liveChat: boolean;
+  ecommerce: boolean;
+  blog: boolean;
+  metaPixel: boolean;
+  whatsapp: boolean;
+  ssl: boolean | null;
+  dmarc: boolean | null;
+}
+
+export const COMPETITOR_CAPABILITY_LABELS: { key: keyof CompetitorCapabilities; label: string }[] = [
+  { key: "analytics", label: "Analytics" },
+  { key: "crmMarketing", label: "CRM / Pazarlama" },
+  { key: "liveChat", label: "Canlı Chat" },
+  { key: "ecommerce", label: "E-ticaret" },
+  { key: "blog", label: "İçerik/Blog" },
+  { key: "metaPixel", label: "Meta Pixel" },
+  { key: "whatsapp", label: "WhatsApp" },
+  { key: "ssl", label: "SSL" },
+  { key: "dmarc", label: "DMARC" },
+];
+
+export interface CompetitorSnapshot {
+  name: string;
+  website: string | null;
+  source: "ai_suggested" | "user";
+  reachable: boolean;
+  digitalMaturityScore: number;
+  techStack: TechStack;
+  capabilities: CompetitorCapabilities;
+  socialPresence: string[];
+  note?: string;
+}
+
+export interface CompetitorGap {
+  capability: string;
+  leadHas: boolean;
+  competitorsWithIt: number;
+  totalCompetitors: number;
+  verdict: "behind" | "ahead" | "par";
+}
+
+export interface CompetitorAnalysis {
+  generatedAt: string;
+  competitors: CompetitorSnapshot[];
+  gaps: CompetitorGap[];
+  leadDigitalMaturity: number;
+  avgCompetitorMaturity: number;
+  competitivePressureScore: number;
+  behindOn: string[];
+  aheadOn: string[];
+  competitiveSummary: string;
+  salesAngle: string;
+}
+
 export interface CompanyIntelligence {
   depth: ScanDepth;
   generatedAt: string;
@@ -168,6 +226,7 @@ export interface CompanyIntelligence {
   scores: IntelScores;
   sources: string[];
   confidence: number;
+  competitors?: CompetitorAnalysis;
 }
 
 export interface Lead {

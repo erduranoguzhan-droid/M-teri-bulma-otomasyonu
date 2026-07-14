@@ -32,6 +32,7 @@ export const config = {
   llmConcurrency: intEnv("LLM_CONCURRENCY", defaultLlmConcurrency),
   enrichConcurrency: intEnv("ENRICH_CONCURRENCY", 4), // website tarama = ag I/O, backend'den bagimsiz
   llmRetries: intEnv("LLM_RETRIES", 3), // gecici hata (rate-limit/timeout/bozuk JSON) icin
+  competitorMax: intEnv("COMPETITOR_MAX", 4), // rakip analizinde firma-basi ust sinir
   // Depolama
   storageBackend: (process.env.STORAGE_BACKEND ?? "json") as StorageBackend,
   supabaseUrl: process.env.SUPABASE_URL ?? "",

@@ -10,6 +10,7 @@ export type CompanyItemPhase =
   | "scraping"
   | "enriching"
   | "ai_analyzing"
+  | "competitor_analyzing"
   | "completed"
   | "error";
 
