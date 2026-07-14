@@ -27,6 +27,11 @@ const COLUMNS: { header: string; get: (l: Lead) => string | number | undefined }
   { header: "Dijital Olgunluk", get: (l) => l.intelligence?.scores.digitalMaturityScore },
   { header: "Karar Verici", get: (l) => l.intelligence?.contacts.length ?? "" },
   { header: "Teknoloji", get: (l) => intelTech(l) },
+  // Rakip analizi kolonları (varsa dolar).
+  { header: "Rakip Baskısı", get: (l) => l.intelligence?.competitors?.competitivePressureScore },
+  { header: "Rakiplerde Geride", get: (l) => l.intelligence?.competitors?.behindOn.join(" ") },
+  { header: "Rakiplerde Önde", get: (l) => l.intelligence?.competitors?.aheadOn.join(" ") },
+  { header: "Rakipler", get: (l) => l.intelligence?.competitors?.competitors.map((c) => c.name).join(" | ") },
   { header: "Güven", get: (l) => l.intelligence?.confidence },
   { header: "Durum", get: (l) => CRM_STATUSES.find((s) => s.value === l.crmStatus)?.label ?? l.crmStatus },
   { header: "Önerilen Hizmet", get: (l) => l.analysis?.recommendedServices[0] },

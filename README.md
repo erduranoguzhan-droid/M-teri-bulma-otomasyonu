@@ -49,6 +49,11 @@ npm run reenrich -- uretim-sanayi   # sadece o sektor
 # Outreach mesajlarini yeniden uret (ton kurallari degisince; sektor filtreli)
 npm run outreach:regen                    # tum analizli leadler
 npm run outreach:regen -- uretim-sanayi   # sadece o sektor
+
+# Rakip analizini mevcut firma leadlerine ekle/yenile (lead yeniden taranmaz; sadece rakipler taze taranir)
+npm run competitors                       # rakip analizi olmayan firma leadleri
+npm run competitors -- --force            # hepsini yeniden analiz et
+npm run competitors -- --max-competitors 3
 ```
 
 ## Dashboard (web arayüzü)

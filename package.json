@@ -16,6 +16,7 @@
     "pipeline": "tsx src/cli.ts pipeline",
     "scan": "tsx src/scan.ts",
     "scan:company": "tsx src/companyScan.ts",
+    "competitors": "tsx src/competitors.ts",
     "setup-db": "tsx src/setupDb.ts",
     "rescore": "tsx src/rescore.ts",
     "reenrich": "tsx src/reenrich.ts",

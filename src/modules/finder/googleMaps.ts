@@ -14,6 +14,9 @@ export interface FindOptions {
   maxResults?: number;
 }
 
+const UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+
 export async function findCompanies(opts: FindOptions): Promise<RawCompany[]> {
   const max = opts.maxResults ?? 20;
   const browser = await chromium.launch({ headless: config.headless });
@@ -21,8 +24,7 @@ export async function findCompanies(opts: FindOptions): Promise<RawCompany[]> {
     const context = await browser.newContext({
       locale: "tr-TR",
       viewport: { width: 1280, height: 900 },
-      userAgent:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      userAgent: UA,
     });
     const page = await context.newPage();
 
@@ -60,6 +62,92 @@ export async function findCompanies(opts: FindOptions): Promise<RawCompany[]> {
   } finally {
     await browser.close();
   }
+}
+
+/**
+ * ISME gore en iyi eslesen TEK yeri dondurur. Marka aramalarinda Maps ilk sirada
+ * alakasiz bir yer donebiliyor; burada feed'deki adaylarin ISIMLERINI okuyup hedefe
+ * en cok benzeyeni secer, SADECE onun detayini ceker (hizli + dogru). Eslesme zayifsa
+ * null doner (cagiran yanlis firmayi atfetmez).
+ */
+export async function findBestPlace(opts: {
+  query: string;
+  targetName: string;
+  max?: number;
+}): Promise<RawCompany | null> {
+  const max = opts.max ?? 8;
+  const browser = await chromium.launch({ headless: config.headless });
+  try {
+    const context = await browser.newContext({ locale: "tr-TR", viewport: { width: 1280, height: 900 }, userAgent: UA });
+    const page = await context.newPage();
+    const url = `https://www.google.com/maps/search/${encodeURIComponent(opts.query)}?hl=tr`;
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
+    await dismissConsent(page);
+
+    const feedSel = 'div[role="feed"]';
+    let candidates: { name: string; href: string }[];
+    try {
+      await page.waitForSelector(feedSel, { timeout: 20000 });
+      candidates = await collectResultCandidates(page, feedSel, max);
+    } catch {
+      // Tek sonuc dogrudan detayda acilmis olabilir; ismi hedefe uyuyorsa dondur.
+      const single = await scrapeSingleDetail(page);
+      return single && nameMatchScore(opts.targetName, single.name) >= 0.5 ? single : null;
+    }
+
+    let best: { name: string; href: string } | undefined;
+    let bestScore = 0;
+    for (const c of candidates) {
+      const s = nameMatchScore(opts.targetName, c.name);
+      if (s > bestScore) {
+        bestScore = s;
+        best = c;
+      }
+    }
+    if (!best || bestScore < 0.5) return null;
+    return await scrapeDetail(page, best.href);
+  } finally {
+    await browser.close();
+  }
+}
+
+/** Feed'deki sonuc adaylarini (isim + link) DETAY cekmeden toplar (aria-label = yer adi). */
+async function collectResultCandidates(
+  page: Page,
+  feedSel: string,
+  max: number,
+): Promise<{ name: string; href: string }[]> {
+  const byHref = new Map<string, string>(); // href -> name
+  let stableRounds = 0;
+  for (let round = 0; round < 30 && byHref.size < max; round++) {
+    const items = await page.$$eval(`${feedSel} a[href*="/maps/place/"]`, (els) =>
+      (els as HTMLAnchorElement[]).map((a) => ({ href: a.href, name: a.getAttribute("aria-label") || "" })),
+    );
+    const before = byHref.size;
+    for (const it of items) if (it.href && !byHref.has(it.href)) byHref.set(it.href, it.name);
+    if (byHref.size >= max) break;
+    if (byHref.size === before) {
+      stableRounds++;
+      if (stableRounds >= 3) break;
+    } else {
+      stableRounds = 0;
+    }
+    await page.$eval(feedSel, (el) => el.scrollBy(0, el.scrollHeight)).catch(() => {});
+    await page.waitForTimeout(1000);
+  }
+  return [...byHref.entries()].slice(0, max).map(([href, name]) => ({ href, name }));
+}
+
+/**
+ * Hedef isim ile aday isim benzerligi 0-1: hedef kelimelerinin kaci adayda geciyor.
+ * "yemeksepeti" -> "Yemeksepeti Park" = 1.0 ; "getir" -> "Maydonoz Döner" = 0.
+ */
+export function nameMatchScore(target: string, candidate: string): number {
+  const norm = (s: string) => s.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9ğüşıöç]+/gi, " ").trim();
+  const tokens = norm(target).split(" ").filter((t) => t.length >= 2);
+  if (!tokens.length) return 0;
+  const cand = norm(candidate);
+  return tokens.filter((t) => cand.includes(t)).length / tokens.length;
 }
 
 async function dismissConsent(page: Page): Promise<void> {

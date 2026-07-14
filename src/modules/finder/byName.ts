@@ -3,7 +3,7 @@
 // Bulunamazsa minimal RawCompany { name } doner (pipeline yine calisir; veri seyrek olur).
 
 import type { RawCompany } from "../../core/types.js";
-import { findCompanies } from "./googleMaps.js";
+import { findBestPlace } from "./googleMaps.js";
 
 export interface FindByNameOptions {
   name: string;
@@ -13,29 +13,19 @@ export interface FindByNameOptions {
 
 export async function findCompanyByName(opts: FindByNameOptions): Promise<RawCompany> {
   const query = [opts.name, opts.city, opts.country].filter(Boolean).join(" ").trim();
-  let results: RawCompany[] = [];
+
+  // ISME en cok benzeyen tek yeri getir (feed adlari okunur, sadece en iyi adayin
+  // detayi cekilir). Marka aramalarinda yanlis firma atfini onler.
+  let best: RawCompany | null = null;
   try {
-    // Birkac aday cek; ilkini korlemesine almak yerine ISME EN COK BENZEYEni sec.
-    // (Marka aramalarinda Maps ilk sirada alakasiz bir yer donebiliyor.)
-    results = await findCompanies({ query, maxResults: 5 });
+    best = await findBestPlace({ query, targetName: opts.name });
   } catch {
-    results = [];
+    best = null;
   }
 
-  // En iyi isim eslesmesini bul.
-  let best: RawCompany | undefined;
-  let bestScore = 0;
-  for (const r of results) {
-    const s = nameMatchScore(opts.name, r.name);
-    if (s > bestScore) {
-      bestScore = s;
-      best = r;
-    }
-  }
-
-  // Yeterince benzeyen sonuc yoksa: YANLIS firmayi atfetme (website/telefon karismasin);
-  // minimal kayit don. deepEnrich website olmadan "erisilemedi" isaretler (uydurma yok).
-  if (!best || bestScore < 0.5) {
+  if (!best) {
+    // Yeterince benzeyen sonuc yok -> minimal kayit. deepEnrich website olmadan
+    // "erisilemedi" isaretler (uydurma yok).
     return { name: opts.name, country: opts.country, city: opts.city };
   }
 
@@ -47,20 +37,6 @@ export async function findCompanyByName(opts: FindByNameOptions): Promise<RawCom
     country: best.country ?? opts.country,
     ...coords,
   };
-}
-
-/**
- * Hedef isim ile aday isim benzerligi 0-1. Hedef kelimelerinin kaci adayda geciyor.
- * "yemeksepeti" -> "Yemeksepeti Park" = 1.0 ; "getir" -> "Maydonoz Döner" = 0.
- */
-function nameMatchScore(target: string, candidate: string): number {
-  const norm = (s: string) =>
-    s.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9ğüşıöç]+/gi, " ").trim();
-  const tokens = norm(target).split(" ").filter((t) => t.length >= 2);
-  if (!tokens.length) return 0;
-  const cand = norm(candidate);
-  const hits = tokens.filter((t) => cand.includes(t)).length;
-  return hits / tokens.length;
 }
 
 /** Google Maps place URL'inden lat/lng ve place kimligini ayiklar. */
