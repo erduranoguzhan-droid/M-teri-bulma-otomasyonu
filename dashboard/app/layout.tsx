@@ -7,9 +7,15 @@ export const metadata: Metadata = {
   description: "AI destekli lead-gen dashboard",
 };
 
+// Boyamadan once temayi ayarla (FOUC yok). Varsayilan: dark.
+const THEME_SCRIPT = `try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=(t==='light')?'light':'dark';}catch(e){document.documentElement.dataset.theme='dark';}`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr">
+    <html lang="tr" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body>
         <div className="wrap">
           <Nav />

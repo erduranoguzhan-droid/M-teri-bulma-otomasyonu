@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "./ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "🎯 Kokpit" },
@@ -13,12 +14,15 @@ export function Nav() {
   const pathname = usePathname();
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   return (
-    <nav className="topnav">
-      {LINKS.map((l) => (
-        <Link key={l.href} href={l.href} className={`topnav-link${isActive(l.href) ? " on" : ""}`}>
-          {l.label}
-        </Link>
-      ))}
-    </nav>
+    <div className="navbar">
+      <nav className="topnav">
+        {LINKS.map((l) => (
+          <Link key={l.href} href={l.href} className={`topnav-link${isActive(l.href) ? " on" : ""}`}>
+            {l.label}
+          </Link>
+        ))}
+      </nav>
+      <ThemeToggle />
+    </div>
   );
 }
