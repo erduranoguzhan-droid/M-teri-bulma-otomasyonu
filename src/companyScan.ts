@@ -1,8 +1,10 @@
 import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import { createStore } from "./core/storage.js";
 import { config } from "./core/config.js";
 import { mapPool } from "./core/pool.js";
 import { writeScanStatus, type CompanyScanItem, type ScanStatus } from "./core/scanStatus.js";
+import { createScanStore, finalizePatch } from "./core/scanStore.js";
 import { findCompanyByName } from "./modules/finder/byName.js";
 import { deepEnrichCompany } from "./modules/enricher/deepEnrich.js";
 import { analyzeIntelligence } from "./modules/analyzer/intelligence.js";
@@ -38,12 +40,16 @@ async function main(): Promise<void> {
   }
 
   const store = createStore();
+  const scanStore = createScanStore();
+  const scanId = randomUUID();
+  const startedAt = new Date().toISOString();
   const items: CompanyScanItem[] = args.names.map((name) => ({ name, phase: "waiting" }));
   const status: ScanStatus = {
     running: true,
     phase: "find",
     mode: "company",
-    startedAt: new Date().toISOString(),
+    scanId,
+    startedAt,
     queries: args.names,
     queryIndex: 0,
     queryTotal: args.names.length,
@@ -51,6 +57,22 @@ async function main(): Promise<void> {
     items,
   };
   await writeScanStatus(status);
+
+  await scanStore
+    .start({
+      id: scanId,
+      name: buildCompanyScanName(args),
+      mode: "company",
+      status: "running",
+      city: args.city,
+      categories: `firma: ${args.names.slice(0, 5).join(", ")}${args.names.length > 5 ? "…" : ""}`,
+      queryTotal: args.names.length,
+      foundCount: 0,
+      leadCount: 0,
+      startedAt,
+      params: { depth: args.depth, lang: args.lang, withCompetitors: args.withCompetitors, names: args.names },
+    })
+    .catch((e) => console.warn("[COMPANY-SCAN] kayit acilamadi:", (e as Error).message));
   console.log(`\n[COMPANY-SCAN] ${args.names.length} firma, derinlik: ${args.depth}\n  ${args.names.join("\n  ")}`);
 
   // LLM eszamanliligi: CLI/Max seri (rate-limit), API paralel.
@@ -95,6 +117,7 @@ async function main(): Promise<void> {
       // Store: firma lead'i olustur + uyumluluk alanlari (mevcut dashboard'da calissin).
       const lead = await store.upsertRaw(raw);
       lead.scanMode = "company";
+      lead.scanId = scanId;
       lead.enrichment = deep.enrichment;
       lead.intelligence = intel;
       lead.analysis = toCompatAnalysis(intel);
@@ -107,10 +130,17 @@ async function main(): Promise<void> {
       done++;
       status.found = done;
       await writeScanStatus(status);
+      await scanStore.update(scanId, { foundCount: done }).catch(() => {});
+      await scanStore
+        .log(scanId, "success", "ai_analyzing", `${item.name} → öncelik ${intel.scores.priorityScore}`, {
+          leadId: lead.id,
+        })
+        .catch(() => {});
       console.log(`  ✓ ${item.name} → oncelik ${intel.scores.priorityScore} | guven ${intel.confidence}`);
     } catch (err) {
       item.message = (err as Error).message;
       await setItem(status, item, "error");
+      await scanStore.log(scanId, "warn", "error", `${item.name}: ${item.message}`).catch(() => {});
       console.warn(`  ! ${item.name}: ${item.message}`);
     }
   });
@@ -120,7 +150,33 @@ async function main(): Promise<void> {
   status.finishedAt = new Date().toISOString();
   status.message = `${done}/${args.names.length} firma tamamlandi.`;
   await writeScanStatus(status);
+
+  // Finalize: bu taramanin leadleri + ort. skor.
+  const mine = (await store.all()).filter((l) => l.scanId === scanId);
+  const scored = mine.filter((l) => l.analysis);
+  const avgScore = scored.length
+    ? Math.round(scored.reduce((s, l) => s + (l.analysis!.leadScore ?? 0), 0) / scored.length)
+    : undefined;
+  await scanStore
+    .finish(
+      scanId,
+      finalizePatch(startedAt, {
+        status: "completed",
+        foundCount: done,
+        leadCount: mine.length,
+        avgScore,
+        message: `${done}/${args.names.length} firma tamamlandi.`,
+      }),
+    )
+    .catch(() => {});
   console.log(`\n[COMPANY-SCAN] Bitti. ${done}/${args.names.length} firma.`);
+}
+
+/** Firma taramasi icin okunabilir ad. */
+function buildCompanyScanName(a: CompanyArgs): string {
+  const first = a.names.slice(0, 3).join(", ");
+  const more = a.names.length > 3 ? ` +${a.names.length - 3}` : "";
+  return `Firma: ${first}${more}`;
 }
 
 async function setItem(status: ScanStatus, item: CompanyScanItem, phase: CompanyScanItem["phase"]): Promise<void> {

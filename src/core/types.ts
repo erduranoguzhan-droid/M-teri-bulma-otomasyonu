@@ -115,6 +115,8 @@ export interface Lead {
   outreach?: Outreach;
   /** "sector" (varsayilan/mevcut) veya "company" (firma-bazli AI intelligence). */
   scanMode?: ScanMode;
+  /** Bu lead'i ureten taramanin id'si (Tarama Gecmisi baglantisi). */
+  scanId?: string;
   /** Firma-bazli modda uretilen tam AI Sales Intelligence blogu. */
   intelligence?: CompanyIntelligence;
   // Outreach/takip (dashboard'dan doldurulur)

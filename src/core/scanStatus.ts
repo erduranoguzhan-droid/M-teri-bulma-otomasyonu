@@ -24,6 +24,8 @@ export interface CompanyScanItem {
 export interface ScanStatus {
   running: boolean;
   phase: ScanPhase;
+  /** Bu canli taramanin kalici kayit id'si (Tarama Gecmisi baglantisi). */
+  scanId?: string;
   startedAt?: string;
   finishedAt?: string;
   queries: string[];

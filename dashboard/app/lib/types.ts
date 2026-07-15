@@ -240,6 +240,7 @@ export interface Lead {
   analysis?: Analysis;
   outreach?: Outreach;
   scanMode?: ScanMode;
+  scanId?: string;
   intelligence?: CompanyIntelligence;
   contactedAt?: string;
   contactChannel?: ContactChannel;

@@ -32,6 +32,10 @@ function rowToLead(r: any): Lead {
     enrichment: r.enrichment ?? undefined,
     analysis: r.analysis ?? undefined,
     outreach: r.outreach ?? undefined,
+    // Firma-modu AI intelligence + rakip analizi (onceden map edilmiyordu -> panel gorunmuyordu).
+    scanMode: r.scan_mode ?? undefined,
+    scanId: r.scan_id ?? undefined,
+    intelligence: r.intelligence ?? undefined,
     contactedAt: r.contacted_at ?? undefined,
     contactChannel: r.contact_channel ?? undefined,
     followUpAt: r.follow_up_at ?? undefined,
