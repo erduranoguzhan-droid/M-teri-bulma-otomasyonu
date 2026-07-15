@@ -55,6 +55,13 @@ export async function getLead(id: string): Promise<Lead | undefined> {
   return data ? rowToLead(data) : undefined;
 }
 
+/** Verimli: tum leadleri cekmeden yalniz bu taramanin leadleri (olcek icin). */
+export async function getLeadsByScan(scanId: string): Promise<Lead[]> {
+  const { data, error } = await client().from("leads").select("*").eq("scan_id", scanId).order("created_at");
+  if (error) throw new Error(`Supabase getLeadsByScan: ${error.message}`);
+  return (data ?? []).map(rowToLead);
+}
+
 async function applyMutation(id: string, make: (lead: Lead) => LeadMutation): Promise<void> {
   const lead = await getLead(id);
   if (!lead) return;

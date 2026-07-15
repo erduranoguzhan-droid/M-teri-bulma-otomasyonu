@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Lead } from "./types";
-import { getLeads } from "./leads";
+import { getLeadsByScan } from "./leads";
 
 export type ScanRunMode = "sector" | "company";
 export type ScanRunStatus = "running" | "completed" | "cancelled" | "error";
@@ -91,10 +91,9 @@ export async function getScan(id: string): Promise<ScanRecord | undefined> {
   return (await readJsonScans()).find((s) => s.id === id);
 }
 
-/** Bir taramanin urettigi leadler (scanId ile). */
+/** Bir taramanin urettigi leadler (scanId ile; DB'de dogrudan filtreli sorgu). */
 export async function getScanLeads(id: string): Promise<Lead[]> {
-  const leads = await getLeads();
-  return leads.filter((l) => l.scanId === id);
+  return getLeadsByScan(id);
 }
 
 // --- Mutasyonlar (Tarama Gecmisi aksiyonlari) ---

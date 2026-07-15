@@ -13,6 +13,9 @@ export function getLeads(): Promise<Lead[]> {
 export function getLead(id: string): Promise<Lead | undefined> {
   return impl.getLead(id);
 }
+export function getLeadsByScan(scanId: string): Promise<Lead[]> {
+  return impl.getLeadsByScan(scanId);
+}
 export function setStatus(id: string, status: CrmStatus): Promise<void> {
   return impl.setStatus(id, status);
 }

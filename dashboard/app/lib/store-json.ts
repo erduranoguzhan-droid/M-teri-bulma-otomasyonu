@@ -41,6 +41,10 @@ export async function getLead(id: string): Promise<Lead | undefined> {
   return (await readAll()).find((l) => l.id === id);
 }
 
+export async function getLeadsByScan(scanId: string): Promise<Lead[]> {
+  return (await readAll()).filter((l) => l.scanId === scanId);
+}
+
 export async function setStatus(id: string, status: CrmStatus): Promise<void> {
   await mutate(id, (l) => applyToLead(l, statusMutation(l, status)));
 }
