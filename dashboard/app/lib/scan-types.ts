@@ -12,6 +12,8 @@ export interface ScanStatus {
   queryTotal: number;
   found: number;
   message?: string;
+  /** Süreç ölmüş ama `running` dosyada asılı kalmış — okuyucuya `running:false` verilir. */
+  stale?: boolean;
   // Firma-bazlı mod (opsiyonel).
   mode?: "sector" | "company";
   items?: CompanyScanItem[];

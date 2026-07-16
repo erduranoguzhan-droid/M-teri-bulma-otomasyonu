@@ -1,10 +1,10 @@
 "use server";
 
-import { spawn } from "child_process";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { deleteScan, getScan, renameScan } from "./scans";
 import { isScanActive, readScanStatus } from "./scan";
+import { spawnNpmDetached } from "./spawn";
 
 export async function renameScanAction(id: string, name: string): Promise<void> {
   await renameScan(id, name);
@@ -46,8 +46,7 @@ export async function rerunScanAction(id: string): Promise<{ ok: boolean; error?
     args.push("--max", String(params.max ?? 15));
   }
 
-  const child = spawn("npm", args, { cwd: parent, detached: true, shell: true, stdio: "ignore", windowsHide: true });
-  child.unref();
+  spawnNpmDetached(args, parent);
   revalidatePath("/scans");
   return { ok: true };
 }

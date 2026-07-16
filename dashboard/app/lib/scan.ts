@@ -18,3 +18,16 @@ export function isScanActive(s: ScanStatus | null): boolean {
   if (s.startedAt && Date.now() - new Date(s.startedAt).getTime() > 30 * 60_000) return false;
   return true;
 }
+
+/**
+ * Durumu okuyucuya vermeden once normalize eder: surec olmus ama `running` bayragi
+ * dosyada asili kalmissa (crash/kill), bayrak burada dusurulur. Boylece "aktif mi?"
+ * sorusunun TEK cevabi olur — client de server da `isScanActive` ile ayni sonucu gorur.
+ */
+export async function readScanStatusNormalized(): Promise<ScanStatus | null> {
+  const s = await readScanStatus();
+  if (s && s.running && !isScanActive(s)) {
+    return { ...s, running: false, stale: true };
+  }
+  return s;
+}
