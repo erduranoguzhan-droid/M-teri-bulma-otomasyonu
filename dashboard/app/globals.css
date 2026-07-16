@@ -25,6 +25,8 @@
   --warn: #fbbf24;        --warn-bg: rgba(251, 191, 36, 0.15);
   --bad: #f87171;         --bad-bg: rgba(248, 113, 113, 0.15);
   --neutral: #94a3b8;     --neutral-bg: rgba(148, 163, 184, 0.15);
+  --info: #a78bfa;        --info-bg: rgba(167, 139, 250, 0.15);
+  --band-ink: #0a0b0e;    /* durum bandi dolgusu UZERINDEKI metin (bantlar dark'ta acik) */
   --wa: #25d366;
   color-scheme: dark;
 }
@@ -51,6 +53,8 @@
   --warn: #a16207;        --warn-bg: #fdf1d6;
   --bad: #b91c1c;         --bad-bg: #fde8e4;
   --neutral: #64748b;     --neutral-bg: #eef0f2;
+  --info: #6d28d9;        --info-bg: #ede9fe;
+  --band-ink: #ffffff;    /* bantlar light'ta koyu → uzerinde beyaz metin */
   --wa: #25d366;
   color-scheme: light;
 }
@@ -117,6 +121,12 @@ a { color: inherit; text-decoration: none; }
 .s-mid { background: var(--accent-soft); color: var(--accent); }
 .s-low { background: var(--neutral-bg); color: var(--neutral); }
 
+/* Buyuk skor sayisi (.scores .sc .n) — badge degil, yalniz renk bandi. */
+.score-band-s-hot { color: var(--bad); }
+.score-band-s-warm { color: var(--warn); }
+.score-band-s-mid { color: var(--accent); }
+.score-band-s-low { color: var(--neutral); }
+
 /* Status select */
 .status-select {
   font: inherit; font-size: 13px; font-weight: 600;
@@ -161,8 +171,8 @@ a { color: inherit; text-decoration: none; }
 .hist { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
 .hist-row { display: grid; grid-template-columns: 160px 1fr 34px; align-items: center; gap: 12px; }
 .hist-label { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hist-bar { display: flex; height: 22px; border-radius: 7px; overflow: hidden; min-width: 3px; }
-.hist-seg { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; font-weight: 700; min-width: 18px; }
+.hist-bar { display: flex; height: 22px; border-radius: 7px; overflow: hidden; min-width: 3px; gap: 2px; }
+.hist-seg { display: flex; align-items: center; justify-content: center; color: var(--band-ink); font-size: 12px; font-weight: 700; min-width: 18px; }
 .hist-total { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
 .hist-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--border-soft); }
 .hist-leg { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
@@ -255,7 +265,9 @@ a { color: inherit; text-decoration: none; }
 /* Pipeline funnel */
 .funnel { padding: 16px 18px; display: flex; flex-direction: column; gap: 9px; }
 .funnel-row { display: grid; grid-template-columns: 170px 1fr 40px; align-items: center; gap: 12px; }
-.funnel-label { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Etiket metni ink giyer; kimligi yanindaki renkli nokta tasir (renk-only degil). */
+.funnel-label { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+.funnel-dot { font-size: 11px; }
 .funnel-bar { background: var(--track); border-radius: 7px; height: 16px; overflow: hidden; }
 .funnel-fill { display: block; height: 100%; border-radius: 7px; min-width: 3px; opacity: 0.9; transition: width 0.4s ease; }
 .funnel-count { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }

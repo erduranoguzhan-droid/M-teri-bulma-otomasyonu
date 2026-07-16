@@ -72,7 +72,7 @@ export function IntelligencePanel({
           <h3>AI Otomasyon Fırsatları ({intel.opportunities.length})</h3>
           <div style={{ display: "grid", gap: 12 }}>
             {intel.opportunities.map((op, i) => (
-              <div key={i} style={{ border: "1px solid var(--border, #24304a)", borderRadius: 10, padding: 12 }}>
+              <div key={i} style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center", marginBottom: 6 }}>
                   <strong>{op.name}</strong>
                   <span className="chip" title="öncelik / zorluk">
@@ -97,8 +97,8 @@ export function IntelligencePanel({
             {[...intel.recommendedServices].sort((a, b) => b.fitScore - a.fitScore).map((s) => (
               <div key={s.service} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{ minWidth: 220 }}>{s.service}</span>
-                <span style={{ flex: 1, height: 8, background: "rgba(255,255,255,.06)", borderRadius: 4, overflow: "hidden" }}>
-                  <span style={{ display: "block", height: "100%", width: `${s.fitScore}%`, background: "var(--accent, #34d399)" }} />
+                <span style={{ flex: 1, height: 8, background: "var(--track)", borderRadius: 4, overflow: "hidden" }}>
+                  <span style={{ display: "block", height: "100%", width: `${s.fitScore}%`, background: "var(--accent)" }} />
                 </span>
                 <b style={{ minWidth: 34, textAlign: "right" }}>{s.fitScore}</b>
               </div>
@@ -154,7 +154,7 @@ export function IntelligencePanel({
           <h3>Güncel Sinyaller</h3>
           <div style={{ display: "grid", gap: 8 }}>
             {intel.signals.map((s: NewsSignal, i) => (
-              <div key={i} style={{ borderLeft: "3px solid var(--accent, #34d399)", paddingLeft: 10 }}>
+              <div key={i} style={{ borderLeft: "3px solid var(--accent)", paddingLeft: 10 }}>
                 <div style={{ fontWeight: 600 }}>{s.title}{s.date ? ` · ${s.date}` : ""}</div>
                 <div style={{ color: "var(--muted)", fontSize: 14 }}>{s.summary}</div>
                 <div style={{ fontSize: 13 }}>→ {s.salesMeaning}</div>

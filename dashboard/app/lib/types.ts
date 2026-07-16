@@ -270,7 +270,9 @@ export const CRM_STATUSES: { value: CrmStatus; label: string; color: string }[] 
   { value: "yeni", label: "Yeni", color: "#6366f1" },
   { value: "iletisim_kuruldu", label: "İletişim Kuruldu", color: "#0891b2" },
   { value: "yanit_bekleniyor", label: "Yanıt Bekleniyor", color: "#ca8a04" },
-  { value: "toplanti_planlandi", label: "Toplantı Planlandı", color: "#7c3aed" },
+  // magenta: onceki #7c3aed (violet) bir sonraki asamanin mavisiyle (#2563eb) renk
+  // korlugunde ayirt edilemiyordu (deutan ΔE 0.4) — huni'de yan yana dusen iki asama.
+  { value: "toplanti_planlandi", label: "Toplantı Planlandı", color: "#d55181" },
   { value: "teklif_gonderildi", label: "Teklif Gönderildi", color: "#2563eb" },
   { value: "muzakere", label: "Müzakere", color: "#ea580c" },
   { value: "kazanildi", label: "Kazanıldı", color: "#16a34a" },
