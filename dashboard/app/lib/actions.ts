@@ -1,10 +1,10 @@
 "use server";
 
-import { spawn } from "child_process";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { markContacted, setDealValue, setStatus, snoozeFollowUp } from "./leads";
 import { isScanActive, readScanStatus } from "./scan";
+import { spawnNpmDetached } from "./spawn";
 import type { ContactChannel, CrmStatus } from "./types";
 
 function revalidate(id: string): void {
@@ -63,22 +63,15 @@ export async function startScanAction(
   }
 
   // CLI scan'i ana dizinde arka planda (detached) baslat.
+  // Bos bayrak gonderme: "--districts ''" CLI'da sonraki bayragi deger sanmaya yol acar.
   const parent = path.join(process.cwd(), "..");
-  const args = [
-    "run", "scan", "--",
-    "--city", input.city,
-    "--districts", input.districts,
-    "--categories", input.categories,
-    "--max", String(Math.max(1, Math.min(30, input.max || 15))),
-  ];
-  const child = spawn("npm", args, {
-    cwd: parent,
-    detached: true,
-    shell: true,
-    stdio: "ignore",
-    windowsHide: true,
-  });
-  child.unref();
+  const args = ["run", "scan", "--"];
+  if (input.city.trim()) args.push("--city", input.city.trim());
+  if (input.districts.trim()) args.push("--districts", input.districts.trim());
+  if (input.categories.trim()) args.push("--categories", input.categories.trim());
+  args.push("--max", String(Math.max(1, Math.min(30, input.max || 15))));
+
+  spawnNpmDetached(args, parent);
   return { ok: true };
 }
 
@@ -124,13 +117,6 @@ export async function startCompanyScanAction(
   if (input.maxCompetitors) args.push("--max-competitors", String(Math.max(1, Math.min(10, input.maxCompetitors))));
   if (input.withCompetitors) args.push("--with-competitors");
 
-  const child = spawn("npm", args, {
-    cwd: parent,
-    detached: true,
-    shell: true,
-    stdio: "ignore",
-    windowsHide: true,
-  });
-  child.unref();
+  spawnNpmDetached(args, parent);
   return { ok: true };
 }

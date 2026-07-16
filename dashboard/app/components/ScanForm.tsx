@@ -312,10 +312,10 @@ function ScanProgress({ status }: { status: ScanStatus }) {
 
 function CompanyProgress({ items }: { items: NonNullable<ScanStatus["items"]> }) {
   const tone: Record<string, string> = {
-    completed: "#34d399",
-    error: "#f87171",
-    ai_analyzing: "#a78bfa",
-    competitor_analyzing: "#f59e0b",
+    completed: "var(--good)",
+    error: "var(--bad)",
+    ai_analyzing: "var(--info)",
+    competitor_analyzing: "var(--warn)",
   };
   return (
     <div className="company-progress" style={{ marginTop: 12, display: "grid", gap: 4 }}>
@@ -327,7 +327,7 @@ function CompanyProgress({ items }: { items: NonNullable<ScanStatus["items"]> })
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {it.phase === "completed" ? "✓" : it.phase === "error" ? "✕" : "•"} {it.name}
           </span>
-          <span style={{ color: tone[it.phase] ?? "#94a3b8", flexShrink: 0 }}>
+          <span style={{ color: tone[it.phase] ?? "var(--muted)", flexShrink: 0 }}>
             {ITEM_PHASE_LABEL[it.phase]}
             {it.phase === "error" && it.message ? ` — ${it.message.slice(0, 40)}` : ""}
           </span>

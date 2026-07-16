@@ -223,8 +223,8 @@ export function LeadExplorer({ leads }: { leads: Lead[] }) {
                         title={`Rakip baskısı ${pressure}/100`}
                         style={{
                           fontSize: 12, fontWeight: 700, marginRight: 6, padding: "1px 6px", borderRadius: 6,
-                          color: pressure >= 50 ? "#f87171" : "#94a3b8",
-                          border: `1px solid ${pressure >= 50 ? "#f87171" : "#334155"}`,
+                          color: pressure >= 50 ? "var(--bad)" : "var(--muted)",
+                          border: `1px solid ${pressure >= 50 ? "var(--bad)" : "var(--border)"}`,
                         }}
                       >
                         🥊 {pressure}

@@ -66,7 +66,7 @@ export default async function InsightsPage() {
         </ChartCard>
 
         <ChartCard title="Hizmet Talebi" hint="Leadlere en çok önerilen Vertex hizmetleri">
-          <HBars data={serviceDemand(leads)} labelWidth={210} defaultColor="#0f766e" />
+          <HBars data={serviceDemand(leads)} labelWidth={210} />
         </ChartCard>
       </div>
 
@@ -89,7 +89,7 @@ export default async function InsightsPage() {
             {s.avgLeadMaturity != null && s.avgCompetitorMaturity != null && (
               <ChartCard title="Dijital Olgunluk: Siz vs Rakip" hint="Firma-modu ortalamaları (0-100)">
                 <CompareBars
-                  a={{ label: "Sizin leadler", value: s.avgLeadMaturity, color: "#0f766e" }}
+                  a={{ label: "Sizin leadler", value: s.avgLeadMaturity, color: "var(--accent)" }}
                   b={{ label: "Rakip ort.", value: s.avgCompetitorMaturity, color: "#eb6834" }}
                 />
               </ChartCard>

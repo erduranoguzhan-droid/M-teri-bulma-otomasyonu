@@ -262,7 +262,7 @@ function Fact({ k, v, link }: { k: string; v: string; link?: string }) {
 function Sc({ n, l }: { n: number; l: string }) {
   return (
     <div className="sc">
-      <div className="n">{n}</div>
+      <div className={`n score-band-${scoreBand(n)}`}>{n}</div>
       <div className="l">{l}</div>
     </div>
   );

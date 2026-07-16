@@ -37,7 +37,7 @@ export function CompetitorPanel({ comp }: { comp: CompetitorAnalysis }) {
               <div className="k">⚠ Geride</div>
               <div className="chips">
                 {comp.behindOn.map((c) => (
-                  <span className="chip" key={c} style={{ borderColor: "#f87171", color: "#f87171" }}>{c}</span>
+                  <span className="chip" key={c} style={{ borderColor: "var(--bad)", color: "var(--bad)" }}>{c}</span>
                 ))}
               </div>
             </div>
@@ -47,7 +47,7 @@ export function CompetitorPanel({ comp }: { comp: CompetitorAnalysis }) {
               <div className="k">✓ Önde</div>
               <div className="chips">
                 {comp.aheadOn.map((c) => (
-                  <span className="chip" key={c} style={{ borderColor: "#34d399", color: "#34d399" }}>{c}</span>
+                  <span className="chip" key={c} style={{ borderColor: "var(--good)", color: "var(--good)" }}>{c}</span>
                 ))}
               </div>
             </div>
@@ -66,7 +66,7 @@ export function CompetitorPanel({ comp }: { comp: CompetitorAnalysis }) {
                 {comp.competitors.map((c) => (
                   <th key={c.name} style={thC} title={c.website ?? ""}>
                     {c.name}
-                    {!c.reachable && <span style={{ color: "#94a3b8" }}> ⋯</span>}
+                    {!c.reachable && <span style={{ color: "var(--muted)" }}> ⋯</span>}
                   </th>
                 ))}
               </tr>
@@ -76,7 +76,7 @@ export function CompetitorPanel({ comp }: { comp: CompetitorAnalysis }) {
                 const gap = comp.gaps.find((g) => g.capability === label);
                 return (
                   <tr key={key}>
-                    <td style={{ ...tdL, color: gap?.verdict === "behind" ? "#f87171" : undefined }}>{label}</td>
+                    <td style={{ ...tdL, color: gap?.verdict === "behind" ? "var(--bad)" : undefined }}>{label}</td>
                     <td style={tdC}>{mark(gap?.leadHas ?? false)}</td>
                     {comp.competitors.map((c) => (
                       <td key={c.name} style={tdC}>{capMark(c.capabilities[key])}</td>
@@ -103,14 +103,14 @@ export function CompetitorPanel({ comp }: { comp: CompetitorAnalysis }) {
       {/* Rakip detay kartları */}
       <div style={{ display: "grid", gap: 8, marginTop: 12 }}>
         {comp.competitors.map((c) => (
-          <div key={c.name} style={{ border: "1px solid var(--border, #24304a)", borderRadius: 10, padding: 10 }}>
+          <div key={c.name} style={{ border: "1px solid var(--border)", borderRadius: 10, padding: 10 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 4 }}>
               <strong>{c.name}</strong>
               <span className="chip">{SOURCE_LABEL[c.source]}</span>
               {c.reachable ? (
-                <span className="chip" style={{ borderColor: "#34d399", color: "#34d399" }}>olgunluk {c.digitalMaturityScore}</span>
+                <span className="chip" style={{ borderColor: "var(--good)", color: "var(--good)" }}>olgunluk {c.digitalMaturityScore}</span>
               ) : (
-                <span className="chip" style={{ color: "#94a3b8" }}>{c.note ?? "erişilemedi"}</span>
+                <span className="chip" style={{ color: "var(--muted)" }}>{c.note ?? "erişilemedi"}</span>
               )}
               {c.website && (
                 <a className="chip" href={c.website} target="_blank" rel="noreferrer" style={{ marginLeft: "auto" }}>
@@ -167,7 +167,7 @@ function shortHost(url: string): string {
   }
 }
 
-const thL: CSSProperties = { textAlign: "left", padding: "6px 8px", borderBottom: "1px solid var(--border, #24304a)", position: "sticky", left: 0 };
-const thC: CSSProperties = { textAlign: "center", padding: "6px 8px", borderBottom: "1px solid var(--border, #24304a)", whiteSpace: "nowrap" };
-const tdL: CSSProperties = { textAlign: "left", padding: "5px 8px", borderBottom: "1px solid rgba(255,255,255,.04)" };
-const tdC: CSSProperties = { textAlign: "center", padding: "5px 8px", borderBottom: "1px solid rgba(255,255,255,.04)" };
+const thL: CSSProperties = { textAlign: "left", padding: "6px 8px", borderBottom: "1px solid var(--border)", position: "sticky", left: 0 };
+const thC: CSSProperties = { textAlign: "center", padding: "6px 8px", borderBottom: "1px solid var(--border)", whiteSpace: "nowrap" };
+const tdL: CSSProperties = { textAlign: "left", padding: "5px 8px", borderBottom: "1px solid var(--border-soft)" };
+const tdC: CSSProperties = { textAlign: "center", padding: "5px 8px", borderBottom: "1px solid var(--border-soft)" };

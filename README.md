@@ -157,6 +157,12 @@ Artık CLI (`scan`/`analyze`/…) ve dashboard aynı Supabase tablosunu kullanı
   `--with-competitors` / `--competitors "A, B"` / `--max-competitors N` (env `COMPETITOR_MAX`, vars. 4).
   Dashboard'da firma detayında "Rakip Analizi" panosu (karşılaştırma matrisi). Additive — sektör modu ve
   eski kayıtlar etkilenmez.
+- [x] **Tema sistemi:** dark varsayılan + ışık/karanlık toggle; tüm renkler token
+  (`globals.css` tek kaynak). Skor bandı = durum → badge/histogram/panel aynı eşleme.
+  Dataviz paletleri kontrast + renk körlüğü açısından doğrulandı (bkz. ARCHITECTURE).
+- [x] **Tarama dayanıklılığı:** ölen tarama artık panelde "çalışıyor" olarak asılı kalmaz
+  (`readScanStatusNormalized`); CLI argümanları tırnaklanır (`lib/spawn.ts`) — boşluklu
+  değerler bozulmaz, form metni komut enjeksiyonuna kapalı.
 - [ ] Otomatik yanıt işleme (IMAP e-posta / WhatsApp API) — gelen yanıtı CRM'e yaz
 - [ ] Yeni sektörler (klinik, e-ticaret) — `SECTOR_PLAYBOOK`'a ekle
 - [ ] Yeni kaynaklar (Instagram, LinkedIn) — yeni finder modülü

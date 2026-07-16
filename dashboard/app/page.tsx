@@ -141,7 +141,9 @@ export default async function Home() {
           <div className="card funnel">
             {funnel.map((s) => (
               <div key={s.value} className="funnel-row">
-                <span className="funnel-label" style={{ color: s.color }}>● {s.label}</span>
+                <span className="funnel-label">
+                  <span className="funnel-dot" style={{ color: s.color }}>●</span> {s.label}
+                </span>
                 <span className="funnel-bar">
                   <span
                     className="funnel-fill"
@@ -192,11 +194,13 @@ function Header() {
   );
 }
 
+// Skor bandi = durum (kategorik kimlik degil) → score-badge ile ayni status tokenlari.
+// Tema-duyarli: light'ta koyu / dark'ta acik; ustundeki sayi --band-ink ile okunur.
 const HIST_BANDS = [
-  { key: "hot", label: "Sıcak 75+", min: 75, color: "#ef7d70" },
-  { key: "warm", label: "Ilık 60-74", min: 60, color: "#e0b04a" },
-  { key: "mid", label: "Orta 40-59", min: 40, color: "#4a9d92" },
-  { key: "low", label: "Düşük <40", min: 0, color: "#c2c8cf" },
+  { key: "hot", label: "Sıcak 75+", min: 75, color: "var(--bad)" },
+  { key: "warm", label: "Ilık 60-74", min: 60, color: "var(--warn)" },
+  { key: "mid", label: "Orta 40-59", min: 40, color: "var(--accent)" },
+  { key: "low", label: "Düşük <40", min: 0, color: "var(--neutral)" },
 ];
 
 function bandOf(score: number): string {
