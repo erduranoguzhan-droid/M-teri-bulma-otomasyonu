@@ -14,12 +14,13 @@ export const SECTOR_COLORS: Record<string, string> = {
   genel: "#4a3aa7",
 };
 
-// Skor bantlari (ordinal kalite rampasi — uygulamada tutarli).
+// Skor bantlari = DURUM (kategorik kimlik degil) → score-badge/histogram ile ayni
+// status tokenlari. Tema-duyarli: light'ta koyu, dark'ta acik.
 export const BANDS = [
-  { key: "hot", label: "Sıcak 75+", min: 75, color: "#ef7d70" },
-  { key: "warm", label: "Ilık 60-74", min: 60, color: "#e0b04a" },
-  { key: "mid", label: "Orta 40-59", min: 40, color: "#4a9d92" },
-  { key: "low", label: "Düşük <40", min: 0, color: "#c2c8cf" },
+  { key: "hot", label: "Sıcak 75+", min: 75, color: "var(--bad)" },
+  { key: "warm", label: "Ilık 60-74", min: 60, color: "var(--warn)" },
+  { key: "mid", label: "Orta 40-59", min: 40, color: "var(--accent)" },
+  { key: "low", label: "Düşük <40", min: 0, color: "var(--neutral)" },
 ] as const;
 
 export interface BarDatum {
@@ -96,10 +97,11 @@ export function pressureDistribution(leads: Lead[]): BarDatum[] {
     .map((l) => l.intelligence?.competitors?.competitivePressureScore)
     .filter((n): n is number => n != null);
   const bucket = (min: number, max: number) => withComp.filter((n) => n >= min && n <= max).length;
+  // Baski da bir durum rampasi: dusuk=notr, orta=uyari, yuksek=kotu.
   return [
-    { label: "Düşük 0-33", value: bucket(0, 33), color: "#c2c8cf" },
-    { label: "Orta 34-66", value: bucket(34, 66), color: "#e0b04a" },
-    { label: "Yüksek 67+", value: bucket(67, 100), color: "#ef7d70" },
+    { label: "Düşük 0-33", value: bucket(0, 33), color: "var(--neutral)" },
+    { label: "Orta 34-66", value: bucket(34, 66), color: "var(--warn)" },
+    { label: "Yüksek 67+", value: bucket(67, 100), color: "var(--bad)" },
   ];
 }
 

@@ -73,6 +73,44 @@ uygulanır: `rescore` (sektör), `competitors` (rakip analizi ekle/yenile). Raki
 - **/lead/[id]** — detay: skorlar + "neden bu skor", zenginleştirme, `IntelligencePanel` + `CompetitorPanel`, hazır mesajlar, insan-onaylı gönderim.
 - Tipler `dashboard/app/lib/types.ts`'te **elle aynalanır** (ayrı Next projesi) — `src/core` değişince güncelle.
 
+### Tema & renk (globals.css)
+
+Tek kaynak `globals.css`: **dark varsayılan** + `[data-theme=light]` override. Kural —
+**component'te hardcoded renk yok**, her renk bir token. Aksi halde bir tema sessizce kırılır
+(ışık temasında `rgba(255,255,255,…)` kenarlıklar görünmez olur).
+
+| Token | Ne için |
+|---|---|
+| `--paper` / `--surface` / `--elevated` / `--border` / `--border-soft` | yüzey & kenarlık |
+| `--ink` / `--muted` | metin (metin **her zaman** ink token'ı giyer, seri rengini değil) |
+| `--accent` + `--accent-ink` / `--accent-soft` | vurgu |
+| `--good` / `--warn` / `--bad` / `--neutral` / `--info` (+ `-bg` çiftleri) | **durum** renkleri |
+| `--band-ink` | durum bandı **dolgusu üzerindeki** metin (dark koyu / light beyaz) |
+
+**Skor bandı = durum, kategorik kimlik değil.** `scoreBand()` → `s-hot|s-warm|s-mid|s-low`;
+badge için `.s-*` (arka planlı), büyük sayı için `.score-band-s-*` (renk-yalnız). Histogram
+bantları da aynı eşlemeyi kullanır — aynı kavram her yerde aynı renk.
+
+**Dataviz renkleri** (`page.tsx` bantları, `insights` grafikleri, `CRM_STATUSES`) durum
+token'ı değildir; değiştirmeden önce paleti doğrula (dataviz skill'i, `validate_palette.js`)
+— kontrast ≥3:1 ve komşu çiftlerde normal-görüş ΔE ≥15 gerekir. Kazanıldı/Kaybedildi'nin
+yeşil-kırmızısı bilinçli: status konvansiyonu, yanında etiket taşır.
+
+### Tarama süreci (dashboard → CLI)
+
+Dashboard taramayı **detached CLI süreci** olarak başlatır; ilerleme `data/scan-status.json`
+üzerinden paylaşılır (dosya = tek kanal).
+
+- **Süreç ölürse bayrak asılı kalır.** "Aktif mi?" sorusunun tek cevabı `isScanActive`
+  (30 dk timeout). Okuyucular **`readScanStatusNormalized()`** kullanır — ölü tarama
+  `running:false` + `stale:true` olarak döner. Client asla ham `running`'e bakmamalı,
+  yoksa panel sonsuza kadar "çalışıyor" gösterir.
+- **Süreç başlatma her zaman `lib/spawn.ts`** üzerinden. Windows'ta `npm` bir `.cmd` ve Node
+  onu `shell:false` ile reddeder (EINVAL) → `shell:true` zorunlu → argümanlar **tırnaklanmalı**.
+  Tırnaksız hâli boşluklu değerleri parçalar ("kafe, restoran") ve kullanıcı metnini
+  komut enjeksiyonuna açar. Boş bayrak (`--districts ""`) gönderme: CLI sonraki bayrağı
+  değer sanır.
+
 ## Uzatma noktaları
 
 | İstenen | Nereye |
@@ -82,7 +120,9 @@ uygulanır: `rescore` (sektör), `competitors` (rakip analizi ekle/yenile). Raki
 | Yeni rakip yeteneği | `intelligence.ts` `COMPETITOR_CAPABILITY_LABELS` + `competitorCapabilities` |
 | Yeni kaynak (IG/LinkedIn) | `src/modules/finder/` altına yeni modül; `RawCompany` döndür |
 | Yeni depolama | `LeadStore` implementasyonu (`storage.ts`) |
-| Yeni grafik | `lib/insights.ts` saf fonksiyon + `InsightCharts.tsx` |
+| Yeni grafik | `lib/insights.ts` saf fonksiyon + `InsightCharts.tsx` (paleti validator'dan geçir) |
+| Yeni renk/durum | `globals.css` token çifti (dark + light) — component'e hex yazma |
+| CLI'yi panelden çağırma | `lib/spawn.ts` `spawnNpmDetached` (elle `spawn` kullanma) |
 
 ## Doğrulama
 

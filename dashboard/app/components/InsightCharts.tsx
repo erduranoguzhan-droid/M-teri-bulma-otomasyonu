@@ -16,7 +16,7 @@ interface HoverState {
 export function HBars({
   data,
   unit = "",
-  defaultColor = "#0f766e",
+  defaultColor = "var(--accent)",
   labelWidth = 150,
 }: {
   data: BarDatum[];
